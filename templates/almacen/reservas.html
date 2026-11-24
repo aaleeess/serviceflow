@@ -1,0 +1,110 @@
+{% extends "personal/base_panel.html" %}{% load sf %}
+{% block titulo %}Almacén: reservas{% endblock %}
+{% block contenido %}
+<header class="page-head">
+  <div class="stack gap-4 push">
+    <h1>Reservas de repuestos</h1>
+    <p>{{ centro.nombre|default:"Sin centro" }} (ficticio). Órdenes diagnosticadas que esperan su pieza.</p>
+  </div>
+  <form method="get" role="search">
+    <label class="search">
+      {% icono "buscar" 18 2 "#545D73" %}
+      <span class="sr-only">Buscar orden o repuesto</span>
+      <input type="search" name="q" value="{{ p.busqueda }}" placeholder="Buscar orden o repuesto">
+      {% if p.filtro != 'todas' %}<input type="hidden" name="filtro" value="{{ p.filtro }}">{% endif %}
+    </label>
+  </form>
+</header>
+{% include "includes/mensajes.html" %}
+{% if p %}
+<section aria-label="Resumen" class="stats">
+  <div class="stat azul"><span class="t">Por reservar</span><span class="n">{{ p.resumen.por_reservar }}</span><span class="d">{{ p.resumen.por_reservar_codigos|join:" y "|default:"Nada pendiente" }}</span></div>
+  <div class="stat ambar"><span class="t">Falta stock</span><span class="n">{{ p.resumen.falta }}</span><span class="d">Necesita reposición o traslado</span></div>
+  <div class="stat rojo"><span class="t">Repuestos agotados</span><span class="n">{{ p.resumen.agotados }}</span><span class="d">{{ p.agotados|join:", "|default:"Ninguno" }}</span></div>
+  <div class="stat"><span class="t">Reservas activas</span><span class="n">{{ p.resumen.reservadas|length }}</span><span class="d">{% for r in p.resumen.reservadas %}{{ r.orden }}{% if not forloop.last %}, {% endif %}{% empty %}Ninguna{% endfor %}{% if p.resumen.reservadas %}, en reparación{% endif %}</span></div>
+</section>
+
+<div class="duo">
+  <section aria-label="Órdenes por atender" class="box clip ancho">
+    <div class="box-head">
+      <h2>Órdenes por atender</h2>
+      <div role="group" aria-label="Filtro" class="seg">
+        <a href="?filtro=todas{% if p.busqueda %}&q={{ p.busqueda|urlencode }}{% endif %}"{% if p.filtro != 'falta' %} aria-current="true"{% endif %}>Todas</a>
+        <a href="?filtro=falta{% if p.busqueda %}&q={{ p.busqueda|urlencode }}{% endif %}"{% if p.filtro == 'falta' %} aria-current="true"{% endif %}>Falta stock</a>
+      </div>
+    </div>
+    <div class="scroll-x">
+      <table class="tbl" style="min-width: 720px">
+        <thead><tr><th scope="col">Orden</th><th scope="col">Repuesto</th><th scope="col" class="right">Necesita</th><th scope="col" class="right">Disponible</th><th scope="col">Situación</th><th scope="col" class="right">Acción</th></tr></thead>
+        <tbody>
+        {% for f in p.filas %}
+          <tr{% if f.faltante %} class="marcada"{% endif %}>
+            <td>
+              <div class="fuerte">{{ f.orden }}</div>
+              <div class="sub">{{ f.modelo_equipo }}, {% if f.situacion == 'sin_diagnostico' %}recibida hace {{ f.desde|timesince }}{% elif f.situacion == 'reservada' %}{% if f.fecha_estimada %}entrega {{ f.fecha_estimada|dia_mes }}{% else %}en reparación{% endif %}{% else %}espera hace {{ f.desde|timesince }}{% endif %}</div>
+            </td>
+            <td><div>{{ f.repuesto }}</div><div class="sub">{{ f.codigo_pieza }}</div></td>
+            {% if f.situacion == 'sin_diagnostico' %}<td class="num muted">—</td><td class="num muted">—</td>{% else %}
+            <td class="num">{{ f.necesita }}</td>
+            <td class="num{% if f.faltante %} rojo{% endif %}">{{ f.disponible }}</td>{% endif %}
+            <td>
+              {% if f.situacion == 'falta' %}<span class="pill ambar">{% icono "triangulo" 14 2.4 %}Falta{{ f.faltante|pluralize:"n" }} {{ f.faltante }} unidad{{ f.faltante|pluralize:"es" }}</span>
+              {% elif f.situacion == 'solicitada' %}<span class="pill violeta">Esperando aprobación</span>
+              {% elif f.situacion == 'autorizada' %}<span class="pill violeta">Aprobada, por registrar</span>
+              {% elif f.situacion == 'lista' %}<span class="pill azul">Lista para reservar</span>
+              {% elif f.situacion == 'sin_diagnostico' %}<span class="pill gris">Sin diagnóstico</span>
+              {% else %}<span class="pill verde">{% icono "check" 14 2.6 %}Reservada</span>{% endif %}
+            </td>
+            <td class="right">
+              {% if f.situacion == 'lista' %}
+                <form method="post" action="{% url 'inventario:reservar' f.orden %}" class="inline">{% csrf_token %}<button type="submit" class="btn sm">Reservar</button></form>
+              {% elif f.situacion == 'sin_diagnostico' %}<button type="button" class="btn sm" disabled title="Se puede reservar cuando el técnico registre el diagnóstico">Reservar</button>
+              {% elif f.situacion == 'reservada' %}<span class="xsmall muted">En reparación</span>
+              {% elif f.situacion == 'autorizada' %}<a class="btn-line azul sm" href="{% url 'inventario:ingresos' %}">Registrar ingreso</a>
+              {% else %}<a class="btn-line azul sm" href="?orden={{ f.orden }}{% if p.filtro != 'todas' %}&filtro={{ p.filtro }}{% endif %}">Ver opciones</a>{% endif %}
+            </td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="6" class="vacio">{% if p.busqueda %}No hay resultados para "{{ p.busqueda }}".{% else %}No hay órdenes esperando repuesto.{% endif %}</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  {% with o=p.opciones %}{% if o %}
+  <aside aria-label="Opciones para {{ o.orden }}" class="box pad angosto">
+    <div class="stack gap-4">
+      <span class="xsmall" style="font-weight: 600; color: #8A4B00">{{ o.orden }}</span>
+      <h2 style="font-size: 19px; line-height: 1.25">Falta{{ o.faltante|pluralize:"n" }} {{ o.faltante }} × {{ o.repuesto|inicial_minuscula }} para completar la reserva</h2>
+    </div>
+    <div class="stack gap-8">
+      <h3 class="small muted" style="font-weight: 600">Disponible por centro</h3>
+      <div class="lista-centros">
+        {% for c in o.por_centro %}
+        <div><span style="flex: 1">{{ c.centro|cut:"Centro " }}{% if c.es_este %} (este centro){% endif %}</span><span class="cant" style="color: {% if c.es_este %}#A3191C{% elif c.disponible %}#0E6B3A{% else %}#545D73{% endif %}">{{ c.disponible }}</span></div>
+        {% endfor %}
+      </div>
+    </div>
+    {% if o.solicitud %}
+      <p class="alert info">{{ o.solicitud }}</p>
+    {% else %}
+    <div class="stack gap-8">
+      {% for c in o.por_centro %}{% if c.alcanza %}
+      <form method="post" action="{% url 'inventario:solicitar' o.orden %}">{% csrf_token %}
+        <input type="hidden" name="tipo" value="TRASLADO"><input type="hidden" name="centro_origen" value="{{ c.centro_id }}">
+        <button type="submit" class="btn block">Pedir traslado desde {{ c.centro|cut:"Centro " }}</button>
+      </form>
+      {% endif %}{% endfor %}
+      <form method="post" action="{% url 'inventario:solicitar' o.orden %}">{% csrf_token %}
+        <input type="hidden" name="tipo" value="REPOSICION">
+        <button type="submit" class="btn-line block">Solicitar reposición</button>
+      </form>
+    </div>
+    <p class="xsmall muted" style="line-height: 1.5">El coordinador aprueba la solicitud antes del traslado. Mientras tanto, la orden sigue en espera de repuesto.</p>
+    {% endif %}
+  </aside>
+  {% endif %}{% endwith %}
+</div>
+{% endif %}
+{% endblock %}

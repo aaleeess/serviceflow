@@ -1,0 +1,8 @@
+# Entorno de Python (cada uno lo crea con: python -m venv .venv)
+.venv/
+__pycache__/
+*.pyc
+
+# Base de datos local y configuración personal
+db.sqlite3
+.claude/

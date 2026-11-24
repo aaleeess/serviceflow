@@ -1,0 +1,6 @@
+{% load sf %}<div class="historial">
+  <h3>Historial</h3>
+  {% for e in orden.historial %}
+  <div class="evento"><span>{{ e.descripcion }}</span><span class="cuando">{{ e.fecha|cuando }}</span></div>
+  {% endfor %}
+</div>

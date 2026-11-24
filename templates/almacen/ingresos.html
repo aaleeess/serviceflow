@@ -1,0 +1,31 @@
+{% extends "personal/base_panel.html" %}{% load sf %}
+{% block titulo %}Registrar ingreso · ServiceFlow{% endblock %}
+{% block contenido %}
+<header class="page-head">
+  <div class="stack gap-4 push">
+    <h1>Registrar ingreso</h1>
+    <p>Movimientos que el coordinador ya aprobó. Al registrarlos, el stock entra a tu centro y puedes reservar.</p>
+  </div>
+</header>
+{% include "includes/mensajes.html" %}
+{% for s in autorizadas %}
+<section class="box pad-lg solicitud" aria-label="{{ s.codigo }}">
+  <div class="row gap-10">
+    <span class="pill violeta">{{ s.tipo_texto }}</span>
+    <span class="xsmall muted">{{ s.codigo }} · aprobado por {{ s.revisor }}{% if s.resuelta %} hace {{ s.resuelta|timesince }}{% endif %}</span>
+  </div>
+  <div class="stack gap-6">
+    <h2>{{ s.cantidad }} × {{ s.repuesto }}{% if s.orden %} para {{ s.orden }}{% endif %}</h2>
+    <p class="small muted">{% if s.tipo == 'TRASLADO' %}Sale de {{ s.origen }} y entra a {{ sesion.centro.nombre }}.{% else %}Llega del proveedor a {{ sesion.centro.nombre }}.{% endif %}</p>
+  </div>
+  <form method="post" action="{% url 'inventario:ejecutar' s.codigo %}">{% csrf_token %}
+    <button type="submit" class="btn">{% if s.tipo == 'TRASLADO' %}Registrar traslado{% else %}Registrar ingreso{% endif %}</button>
+  </form>
+</section>
+{% empty %}
+<div class="box vacio-box">
+  <strong style="color: #151A2D; font-size: 18px">No hay movimientos por registrar</strong>
+  <span>Cuando el coordinador apruebe un traslado o una reposición, aparecerá aquí.</span>
+</div>
+{% endfor %}
+{% endblock %}

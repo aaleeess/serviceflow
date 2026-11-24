@@ -1,0 +1,43 @@
+{% extends "personal/base_panel.html" %}{% load sf %}
+{% block titulo %}Reportes · ServiceFlow{% endblock %}
+{% block contenido %}
+<header class="page-head">
+  <div class="stack gap-4 push">
+    <h1>Reportes</h1>
+    <p>Órdenes y faltantes de repuestos en los dos centros (RF-15).</p>
+  </div>
+</header>
+<section aria-label="Resumen" class="stats">
+  <div class="stat azul"><span class="t">Solicitudes por aprobar</span><span class="n">{{ r.pendientes }}</span><span class="d"><a href="{% url 'coordinacion:solicitudes' %}" style="color: #FFFFFF">Ir a solicitudes</a></span></div>
+  <div class="stat ambar"><span class="t">En espera de repuesto</span><span class="n">{{ r.espera }}</span><span class="d">Órdenes detenidas por piezas</span></div>
+  <div class="stat"><span class="t">Órdenes abiertas</span><span class="n">{{ r.abiertas }}</span><span class="d">En los dos centros</span></div>
+  <div class="stat"><span class="t">Entregadas</span><span class="n">{{ r.entregadas|length }}</span><span class="d">Reparaciones terminadas</span></div>
+</section>
+
+<div class="duo">
+  <div class="ancho stack gap-20">
+    <section class="box clip" aria-label="Órdenes por centro">
+      <div class="box-head"><h2>Órdenes por centro y estado</h2></div>
+      <div class="scroll-x">
+        <table class="tbl" style="min-width: 760px">
+          <thead><tr><th scope="col">Centro</th>{% for nombre, _ in r.por_centro.0.estados %}<th scope="col" class="right">{{ nombre }}</th>{% endfor %}<th scope="col" class="right">Total</th></tr></thead>
+          <tbody>
+          {% for c in r.por_centro %}
+            <tr><td class="fuerte">{{ c.centro }}</td>{% for _, n in c.estados %}<td class="num">{{ n }}</td>{% endfor %}<td class="num">{{ c.total }}</td></tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+    <section class="box pad" aria-label="Solicitudes por estado">
+      <h2>Solicitudes de repuestos por estado</h2>
+      {% for estado, n in r.solicitudes %}
+      <div class="item-linea"><div class="txt"><strong>{{ estado }}</strong></div><span class="fuerte" style="font-weight: 700">{{ n }}</span></div>
+      {% empty %}<p class="small muted">Todavía no hay solicitudes.</p>{% endfor %}
+    </section>
+  </div>
+  <div class="angosto stack gap-20">
+    {% include "coordinacion/_reportes_laterales.html" %}
+  </div>
+</div>
+{% endblock %}

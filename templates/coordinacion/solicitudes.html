@@ -1,0 +1,84 @@
+{% extends "personal/base_panel.html" %}{% load sf %}
+{% block titulo %}Coordinación: solicitudes{% endblock %}
+{% block contenido %}
+<header class="page-head" style="align-items: flex-end">
+  <div class="stack gap-4 push">
+    <h1>Solicitudes por aprobar</h1>
+    <p>Reposiciones y traslados de Miraflores y San Isidro.</p>
+  </div>
+</header>
+{% include "includes/mensajes.html" %}
+<section aria-label="Resumen" class="stats">
+  <div class="stat azul"><span class="t">Por aprobar</span><span class="n">{{ conteos.todas }}</span><span class="d">{% if not conteos.todas %}Nada pendiente{% elif r.pendientes_traslado == conteos.todas %}{% if r.pendientes_traslado == 1 %}Un traslado entre centros{% else %}Traslados entre centros{% endif %}{% elif r.pendientes_traslado == 0 %}Reposición del proveedor{% else %}Traslados y reposiciones{% endif %}</span></div>
+  <div class="stat ambar"><span class="t">En espera de repuesto</span><span class="n">{{ r.espera }}</span><span class="d">Órdenes detenidas por piezas</span></div>
+  <div class="stat"><span class="t">Órdenes abiertas</span><span class="n">{{ r.abiertas }}</span><span class="d">En los dos centros</span></div>
+  <div class="stat"><span class="t">Entregadas</span><span class="n">{{ r.entregadas|length }}</span><span class="d">{% for o in r.entregadas|slice:":2" %}{{ o.codigo }}, {{ o.centro.nombre|cut:"Centro " }}{% if not forloop.last %} · {% endif %}{% empty %}Ninguna todavía{% endfor %}</span></div>
+</section>
+
+<div role="group" aria-label="Filtros rápidos" class="chips">
+  <a class="chip" href="?{% if centro %}centro={{ centro|urlencode }}{% endif %}"{% if not tipo %} aria-current="true"{% endif %}>Todas {{ conteos.todas }}</a>
+  <a class="chip" href="?tipo=TRASLADO{% if centro %}&centro={{ centro|urlencode }}{% endif %}"{% if tipo == 'TRASLADO' %} aria-current="true"{% endif %}>Traslados {{ conteos.TRASLADO }}</a>
+  <a class="chip" href="?tipo=REPOSICION{% if centro %}&centro={{ centro|urlencode }}{% endif %}"{% if tipo == 'REPOSICION' %} aria-current="true"{% endif %}>Reposiciones {{ conteos.REPOSICION }}</a>
+  <span style="width: 1px; background: #DCE1EB; margin: 0 4px" aria-hidden="true"></span>
+  {% for nombre, n in conteos.centros %}
+  <a class="chip" href="?{% if tipo %}tipo={{ tipo }}&{% endif %}{% if centro != nombre %}centro={{ nombre|urlencode }}{% endif %}"{% if centro == nombre %} aria-current="true"{% endif %}>Para {{ nombre|cut:"Centro " }} {{ n }}</a>
+  {% endfor %}
+</div>
+
+<div class="duo">
+  <div class="ancho stack gap-20">
+    {% for s in pendientes %}
+    <form method="post" action="{% url 'coordinacion:resolver' s.codigo %}" aria-label="Solicitud {{ s.codigo }}" class="box pad-lg solicitud">
+      {% csrf_token %}
+      <div class="row gap-10">
+        <span class="pill violeta">{{ s.tipo_texto }}</span>
+        <span class="xsmall muted">Pedido por {{ s.solicitante }} (Almacén) hace {{ s.creada|timesince }}</span>
+      </div>
+      <div class="stack gap-6">
+        <h2>{{ s.cantidad }} × {{ s.repuesto|inicial_minuscula }}{% if s.orden %} para {{ s.orden }}{% endif %}</h2>
+        <p class="small muted">{{ s.codigo_pieza }}.{% if s.orden %} La orden necesita {{ s.necesita }} y {{ s.destino|cut:"Centro " }} tiene {{ s.destino_disponible }}.{% endif %}</p>
+      </div>
+      <div class="ruta">
+        <div>
+          <span class="xsmall muted">Sale de</span>
+          {% if s.tipo == 'TRASLADO' %}
+          <span class="lugar">{{ s.origen|cut:"Centro " }}</span>
+          <span class="xsmall" style="color: #0E6B3A">{{ s.origen_disponible }} disponibles, quedarían {{ s.origen_queda }}</span>
+          {% else %}
+          <span class="lugar">Proveedor</span>
+          <span class="xsmall muted">Reposición sin fecha definitiva</span>
+          {% endif %}
+        </div>
+        {% icono "flecha" 28 2 "#1428A0" %}
+        <div>
+          <span class="xsmall muted">Llega a</span>
+          <span class="lugar">{{ s.destino|cut:"Centro " }}</span>
+          <span class="xsmall muted">{% if s.orden %}Completa la reserva de {{ s.orden }}{% else %}Aumenta el stock{% endif %}</span>
+        </div>
+      </div>
+      <div class="field">
+        <label for="motivo-{{ s.codigo }}" class="label">Motivo <span class="opcional">(obligatorio si rechazas)</span></label>
+        <textarea id="motivo-{{ s.codigo }}" name="motivo" rows="2" class="textarea" placeholder="Ej.: San Isidro necesita esas pantallas esta semana"></textarea>
+      </div>
+      <div class="row gap-10">
+        <button type="submit" name="decision" value="aprobar" class="btn" style="padding: 0 22px">Aprobar {% if s.tipo == 'TRASLADO' %}traslado{% else %}reposición{% endif %}</button>
+        <button type="submit" name="decision" value="rechazar" class="btn-line rojo" style="padding: 0 22px">Rechazar</button>
+      </div>
+    </form>
+    {% empty %}
+    <div class="box vacio-box">
+      {% if conteos.todas %}
+      <strong style="color: #151A2D; font-size: 18px">No hay solicitudes con este filtro</strong>
+      <a href="{% url 'coordinacion:solicitudes' %}">Ver todas</a>
+      {% else %}
+      <strong style="color: #151A2D; font-size: 18px">No hay solicitudes por aprobar</strong>
+      <span>Cuando almacén pida un traslado o una reposición, aparecerá aquí.</span>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+  <div class="angosto stack gap-20">
+    {% include "coordinacion/_reportes_laterales.html" %}
+  </div>
+</div>
+{% endblock %}

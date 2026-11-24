@@ -1,0 +1,5 @@
+<form method="post" action="{% url 'atencion:cancelar' orden.codigo %}" class="inline"
+  onsubmit="const m=prompt('¿Por qué cancelas la solicitud {{ orden.codigo }}? (opcional)');if(m===null)return false;this.motivo.value=m;">
+  {% csrf_token %}<input type="hidden" name="motivo" value="">
+  <button type="submit" class="btn-text rojo">Cancelar solicitud</button>
+</form>

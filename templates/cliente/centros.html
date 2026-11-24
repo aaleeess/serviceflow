@@ -1,0 +1,19 @@
+{% extends "cliente/base_cliente.html" %}{% load sf %}
+{% block titulo %}Centros de servicio · ServiceFlow{% endblock %}
+{% block contenido %}
+<a href="{% url 'atencion:mis_reparaciones' %}" class="small" style="font-weight: 600">← Mis reparaciones</a>
+<div class="stack gap-4">
+  <h1>Centros del piloto</h1>
+  <p class="muted" style="font-size: 15px">Datos ficticios para el prototipo académico.</p>
+</div>
+<div class="centros">
+  {% for c in centros %}
+  <div class="box pad">
+    <span class="tick-icon">{% icono "pin" 18 2.2 %}</span>
+    <h2 style="font-size: 20px">{{ c.nombre }}</h2>
+    {% if c.direccion %}<p class="small muted">{{ c.direccion }}</p>{% endif %}
+    <p class="small"><strong>Horario:</strong> {{ c.horario_atencion }}</p>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,37 @@
+{% extends "personal/base_panel.html" %}{% load sf %}
+{% block titulo %}Cancelar órdenes · ServiceFlow{% endblock %}
+{% block contenido %}
+<header class="page-head">
+  <div class="stack gap-4 push">
+    <h1>Cancelar órdenes</h1>
+    <p>Solo se cancelan órdenes Recibidas o En evaluación, siempre con motivo. Se avisa al cliente.</p>
+  </div>
+</header>
+{% include "includes/mensajes.html" %}
+<section class="box clip" aria-label="Órdenes cancelables">
+  <div class="scroll-x">
+    <table class="tbl" style="min-width: 820px">
+      <thead><tr><th scope="col">Orden</th><th scope="col">Cliente</th><th scope="col">Estado</th><th scope="col" class="right">Cancelar</th></tr></thead>
+      <tbody>
+      {% for o in ordenes %}
+        <tr>
+          <td><div class="fuerte">{{ o.codigo }}</div><div class="sub">{{ o.modelo_equipo }} · {{ o.falla_reportada|truncatechars:40 }}</div></td>
+          <td>{{ o.cliente }}</td>
+          <td><span class="pill {{ o.estado|clase_estado }}">{{ o.estado_texto }}</span></td>
+          <td>
+            <form method="post" class="ajuste">{% csrf_token %}
+              <input type="hidden" name="codigo" value="{{ o.codigo }}">
+              <label class="sr-only" for="m-{{ o.codigo }}">Motivo para cancelar {{ o.codigo }}</label>
+              <input id="m-{{ o.codigo }}" name="motivo" class="input motivo" style="width: 240px" placeholder="Motivo (obligatorio)" required>
+              <button type="submit" class="btn-line rojo sm">Cancelar orden</button>
+            </form>
+          </td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="4" class="vacio">No hay órdenes que se puedan cancelar.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

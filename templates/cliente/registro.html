@@ -1,0 +1,34 @@
+{% extends "base.html" %}{% load sf %}
+{% block titulo %}Crea tu cuenta · ServiceFlow{% endblock %}
+{% block cuerpo %}
+<div class="personal">
+  <div class="row gap-10">
+    <a class="brand push" href="{% url 'inicio' %}">
+      <span class="brand-mark">{% icono "marca" 18 2.4 "#FFFFFF" %}</span>
+      <span class="brand-name">ServiceFlow</span>
+    </a>
+    <a href="{% url 'inicio' %}" style="display: inline-flex; align-items: center; min-height: 44px; font-size: 14px; font-weight: 600">Volver al inicio</a>
+  </div>
+  <form method="post" class="login-card" style="max-width: 520px; flex-basis: auto; align-self: center" novalidate>
+    {% csrf_token %}
+    <div class="stack gap-6">
+      <h2>Crea tu cuenta</h2>
+      <p class="muted" style="font-size: 15px">Con tu cuenta registras reparaciones y sigues su avance.</p>
+    </div>
+    {% if form.errors %}<p role="alert" class="alert error">{% icono "alerta" 18 2.2 %}Revisa los campos marcados en rojo.</p>{% endif %}
+    {% for campo in form %}
+    <div class="field{% if campo.errors %} error{% endif %}">
+      <label for="{{ campo.id_for_label }}" class="label">{{ campo.label }}</label>
+      <input id="{{ campo.id_for_label }}" name="{{ campo.html_name }}" class="input"
+        type="{% if 'password' in campo.html_name %}password{% elif campo.html_name == 'email' %}email{% else %}text{% endif %}"
+        value="{% if 'password' not in campo.html_name %}{{ campo.value|default:'' }}{% endif %}" required>
+      {% for e in campo.errors %}<span class="field-error">{{ e }}</span>{% endfor %}
+      {% if campo.html_name == 'email' %}<span class="help">Aquí te llegan los avisos de tu reparación.</span>{% endif %}
+      {% if campo.html_name == 'password1' %}<span class="help">Al menos 8 caracteres y que no sea solo números.</span>{% endif %}
+    </div>
+    {% endfor %}
+    <button type="submit" class="btn lg block">Crear cuenta</button>
+    <p class="login-foot">¿Ya tienes cuenta? <a href="{% url 'inicio' %}" style="font-weight: 700">Inicia sesión</a></p>
+  </form>
+</div>
+{% endblock %}

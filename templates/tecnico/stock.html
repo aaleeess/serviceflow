@@ -1,0 +1,42 @@
+{% extends "personal/base_panel.html" %}{% load sf %}
+{% block titulo %}Stock del centro · ServiceFlow{% endblock %}
+{% block contenido %}
+<header class="page-head">
+  <div class="stack gap-4 push">
+    <h1>Stock del centro</h1>
+    <p>{{ centro.nombre|default:"Sin centro" }} (ficticio). Disponible = físico − reservado.{% if not editable %} Solo consulta.{% endif %}</p>
+  </div>
+</header>
+{% include "includes/mensajes.html" %}
+<section class="box clip" aria-label="Stock">
+  <div class="scroll-x">
+    <table class="tbl" style="min-width: {% if editable %}860{% else %}560{% endif %}px">
+      <thead><tr><th scope="col">Repuesto</th><th scope="col" class="right">Físico</th><th scope="col" class="right">Reservado</th><th scope="col" class="right">Disponible</th>{% if editable %}<th scope="col" class="right">Ajustar (conteo o pieza dañada)</th>{% endif %}</tr></thead>
+      <tbody>
+      {% for f in filas %}
+        <tr>
+          <td><div>{{ f.repuesto }}</div><div class="sub">{{ f.codigo_pieza }}</div></td>
+          <td class="num">{{ f.fisico }}</td>
+          <td class="num">{{ f.reservado }}</td>
+          <td class="num{% if f.disponible == 0 %} rojo{% endif %}">{% if f.disponible == 0 %}<span class="pill rojo">Agotado</span>{% else %}{{ f.disponible }}{% endif %}</td>
+          {% if editable %}
+          <td>
+            <form method="post" action="{% url 'inventario:ajustar' %}" class="ajuste">
+              {% csrf_token %}<input type="hidden" name="inventario" value="{{ f.inventario_id }}">
+              <label class="sr-only" for="c{{ f.inventario_id }}">Nueva cantidad de {{ f.repuesto }}</label>
+              <input id="c{{ f.inventario_id }}" class="input" type="number" name="cantidad" min="{{ f.reservado }}" value="{{ f.fisico }}" required>
+              <label class="sr-only" for="m{{ f.inventario_id }}">Motivo</label>
+              <input id="m{{ f.inventario_id }}" class="input motivo" name="motivo" placeholder="Motivo" required>
+              <button type="submit" class="btn-line sm">Ajustar</button>
+            </form>
+          </td>
+          {% endif %}
+        </tr>
+      {% empty %}
+        <tr><td colspan="5" class="vacio">Este centro todavía no tiene repuestos registrados.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

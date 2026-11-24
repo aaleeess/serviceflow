@@ -1,0 +1,32 @@
+{% extends "personal/base_panel.html" %}{% load sf %}
+{% block titulo %}Movimientos · ServiceFlow{% endblock %}
+{% block contenido %}
+<header class="page-head">
+  <div class="stack gap-4 push">
+    <h1>Movimientos</h1>
+    <p>Ingresos, consumos, ajustes y traslados de {{ sesion.centro.nombre }}, con quién los hizo.</p>
+  </div>
+</header>
+{% include "includes/mensajes.html" %}
+<section class="box clip" aria-label="Movimientos">
+  <div class="scroll-x">
+    <table class="tbl" style="min-width: 760px">
+      <thead><tr><th scope="col">Fecha</th><th scope="col">Tipo</th><th scope="col">Repuesto</th><th scope="col" class="right">Cantidad</th><th scope="col">Motivo</th><th scope="col">Hecho por</th></tr></thead>
+      <tbody>
+      {% for m in movimientos %}
+        <tr>
+          <td class="nowrap">{{ m.fecha|cuando }}</td>
+          <td>{{ m.tipo }}</td>
+          <td>{{ m.repuesto }}</td>
+          <td class="num" style="color: {% if m.cantidad > 0 %}#0E6B3A{% else %}#A3191C{% endif %}">{% if m.cantidad > 0 %}+{% endif %}{{ m.cantidad }}</td>
+          <td><div>{{ m.motivo|default:"—" }}</div>{% if m.referencia %}<div class="sub">{{ m.referencia }}</div>{% endif %}</td>
+          <td>{{ m.usuario }}</td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="6" class="vacio">Todavía no hay movimientos en este centro.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

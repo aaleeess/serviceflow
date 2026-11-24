@@ -1,0 +1,42 @@
+{% extends "cliente/base_cliente.html" %}{% load sf %}
+{% block titulo %}Nueva solicitud · ServiceFlow{% endblock %}
+{% block contenido %}
+<div class="stack gap-4">
+  <h1>Nueva solicitud</h1>
+  <p class="muted" style="font-size: 15px">Al confirmar te damos un código para seguir tu reparación.</p>
+</div>
+<form method="post" class="form-card" novalidate>
+  {% csrf_token %}
+  {% if form.non_field_errors %}<p role="alert" class="alert error">{% icono "alerta" 18 2.2 %}{{ form.non_field_errors|join:" " }}</p>
+  {% elif form.errors %}<p role="alert" class="alert error">{% icono "alerta" 18 2.2 %}Revisa los campos marcados en rojo.</p>{% endif %}
+
+  <div class="field{% if form.modelo_equipo.errors %} error{% endif %}">
+    <label for="id_modelo_equipo" class="label">Modelo del equipo
+      <span class="tip"><button type="button" aria-describedby="tip-modelo">{% icono "info" 16 %}</button>
+        <span role="tooltip" id="tip-modelo" class="tip-text">En tu celular entra a Ajustes → Acerca del teléfono. El modelo aparece como "Nombre del modelo", por ejemplo Galaxy A55 5G.</span></span>
+    </label>
+    <input id="id_modelo_equipo" name="modelo_equipo" class="input" value="{{ form.modelo_equipo.value|default:'' }}" placeholder="Ejemplo: Galaxy A55 5G" maxlength="100" required>
+    {% for e in form.modelo_equipo.errors %}<span class="field-error">{{ e }}</span>{% endfor %}
+  </div>
+
+  <div class="field{% if form.falla_reportada.errors %} error{% endif %}">
+    <label for="id_falla_reportada" class="label">¿Qué le pasa?</label>
+    <textarea id="id_falla_reportada" name="falla_reportada" rows="4" class="textarea" placeholder="Ejemplo: la pantalla se rompió tras una caída" required>{{ form.falla_reportada.value|default:'' }}</textarea>
+    {% for e in form.falla_reportada.errors %}<span class="field-error">{{ e }}</span>{% endfor %}
+  </div>
+
+  <div class="field{% if form.centro.errors %} error{% endif %}">
+    <label for="id_centro" class="label">Centro de servicio</label>
+    <select id="id_centro" name="centro" class="select" required>
+      {% for valor, texto in form.fields.centro.choices %}<option value="{{ valor }}"{% if form.centro.value|stringformat:"s" == valor|stringformat:"s" %} selected{% endif %}>{{ texto }}</option>{% endfor %}
+    </select>
+    {% for e in form.centro.errors %}<span class="field-error">{{ e }}</span>{% endfor %}
+    <span class="help">Ahí dejarás tu equipo para la evaluación. <a href="{% url 'atencion:centros' %}">Ver direcciones</a></span>
+  </div>
+
+  <div class="row gap-10">
+    <button type="submit" class="btn">Confirmar</button>
+    <a class="btn-line" href="{% url 'atencion:mis_reparaciones' %}">Cancelar</a>
+  </div>
+</form>
+{% endblock %}

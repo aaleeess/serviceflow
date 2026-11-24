@@ -1,0 +1,15 @@
+{% extends "base.html" %}{% load sf %}
+{% block titulo %}Sin rol asignado · ServiceFlow{% endblock %}
+{% block cuerpo %}
+<div class="personal">
+  <div class="box pad-lg" style="max-width: 560px">
+    <span class="brand-mark">{% icono "marca" 18 2.4 "#FFFFFF" %}</span>
+    <h1 style="font-size: 26px; font-weight: 800">Tu cuenta no tiene un rol asignado</h1>
+    <p class="muted">No eres cliente, técnico, almacén ni coordinador. Si eres administrador, entra al panel de administración.</p>
+    <div class="row gap-10">
+      <a class="btn" href="{% url 'admin:index' %}">Ir a administración</a>
+      <form method="post" action="{% url 'salir' %}">{% csrf_token %}<button class="btn-line" type="submit">Salir</button></form>
+    </div>
+  </div>
+</div>
+{% endblock %}

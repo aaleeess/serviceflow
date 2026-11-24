@@ -1,0 +1,12 @@
+{% load sf %}<div class="diag-cliente">
+  <span class="tick-icon">{% icono "llave" 18 2 %}</span>
+  <div class="stack gap-4">
+    <strong>Diagnóstico técnico</strong>
+    {% if orden.diagnostico %}
+      <span class="small">{{ orden.diagnostico }}</span>
+      <span class="xsmall muted">{% if orden.pieza %}Pieza necesaria: {{ orden.pieza }}{% else %}No necesita repuesto{% endif %}</span>
+    {% else %}
+      <span class="small muted">El técnico todavía no revisa tu equipo.</span>
+    {% endif %}
+  </div>
+</div>

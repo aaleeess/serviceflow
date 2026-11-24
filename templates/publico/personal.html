@@ -1,0 +1,55 @@
+{% extends "base.html" %}{% load sf %}
+{% block titulo %}ServiceFlow: acceso del personal{% endblock %}
+{% block cuerpo %}
+<div class="personal">
+  <div class="row gap-10">
+    <a class="brand push" href="{% url 'inicio' %}">
+      <span class="brand-mark">{% icono "marca" 18 2.4 "#FFFFFF" %}</span>
+      <span class="brand-name">ServiceFlow</span>
+    </a>
+    <a href="{% url 'inicio' %}" style="display: inline-flex; align-items: center; min-height: 44px; font-size: 14px; font-weight: 600">Volver al inicio</a>
+  </div>
+
+  {% if not area %}
+  <section aria-labelledby="titulo-areas" class="stack gap-24">
+    <div class="stack gap-6">
+      <h1 id="titulo-areas" style="font-size: 34px; font-weight: 800; letter-spacing: -0.03em">¿En qué área trabajas?</h1>
+      <p class="muted">Elige tu área para iniciar sesión con tu usuario del centro de servicio.</p>
+    </div>
+    <div class="areas">
+      {% for a in areas %}
+      <a class="area" href="?area={{ a.id }}">
+        <span class="area-icon c-{{ a.id }}">{% icono a.icono 22 %}</span>
+        <strong>{{ a.nombre }}</strong>
+        <span class="resumen">{{ a.resumen }}</span>
+        <span class="ir">Ingresar</span>
+      </a>
+      {% endfor %}
+    </div>
+    <p class="small muted">¿Eres cliente? <a href="{% url 'inicio' %}" style="font-weight: 700">Ingresa desde el inicio</a></p>
+  </section>
+  {% else %}
+  <section aria-label="Inicio de sesión del área" class="split">
+    <div class="split-dark">
+      <span class="icono-oscuro a-{{ area.id }}">{% icono area.icono 24 %}</span>
+      <h1>Área <span class="a-{{ area.id }}">{{ area.nombre }}</span></h1>
+      <p>{{ area.resumen }}</p>
+      <ul>
+        {% for t in area.tareas %}<li><span class="a-{{ area.id }}" style="display: flex">{% icono "check" 18 2.6 %}</span>{{ t }}</li>{% endfor %}
+      </ul>
+    </div>
+    <form method="post" action="{% url 'personal' %}?area={{ area.id }}" class="split-form" aria-label="Credenciales" novalidate>
+      {% csrf_token %}
+      <div class="stack gap-6">
+        <h2>Iniciar sesión</h2>
+        <p class="muted" style="font-size: 15px">Usa el usuario y la contraseña que te asignó el centro.</p>
+      </div>
+      {% include "includes/error_login.html" %}
+      {% include "includes/clave.html" with id="usuario-p" ejemplo=area.ejemplo %}
+      <button type="submit" class="btn lg block">Ingresar</button>
+      <p class="small muted" style="text-align: center">¿No es tu área? <a href="{% url 'personal' %}" style="font-weight: 700; display: inline-block; padding: 12px 4px">Elegir otra área</a></p>
+    </form>
+  </section>
+  {% endif %}
+</div>
+{% endblock %}

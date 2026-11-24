@@ -1,0 +1,27 @@
+{% extends "base.html" %}{% load sf %}
+{% block cuerpo %}
+<div style="min-height: 100vh">
+  <header class="cli-header">
+    <div class="inner">
+      <a class="brand" href="{% url 'atencion:mis_reparaciones' %}" style="color: #FFFFFF">
+        <span class="brand-mark blanco">{% icono "marca" 18 2.4 "#1428A0" %}</span>
+        <span class="brand-name">ServiceFlow</span>
+      </a>
+      <nav aria-label="Menú del cliente" class="cli-nav">
+        <a href="{% url 'atencion:mis_reparaciones' %}"{% if sesion.actual == 'atencion:mis_reparaciones' or sesion.actual == 'atencion:detalle' %} aria-current="page"{% endif %}>Mis reparaciones</a>
+        <a href="{% url 'atencion:avisos' %}"{% if sesion.actual == 'atencion:avisos' %} aria-current="page"{% endif %}>
+          {% icono "campana" 16 %}<span style="margin-left: 6px">Avisos</span>{% if sesion.avisos_nuevos %}<span class="badge-aviso" aria-label="{{ sesion.avisos_nuevos }} sin leer">{{ sesion.avisos_nuevos }}</span>{% endif %}
+        </a>
+        <a href="{% url 'atencion:centros' %}"{% if sesion.actual == 'atencion:centros' %} aria-current="page"{% endif %}>Centros</a>
+      </nav>
+      <span class="avatar cliente">{{ sesion.nombre|iniciales }}</span>
+      <span style="font-size: 15px; font-weight: 600">{{ sesion.nombre }}</span>
+      <form method="post" action="{% url 'salir' %}" class="inline">{% csrf_token %}<button type="submit" class="salir">Salir</button></form>
+    </div>
+  </header>
+  <main class="cli-main">
+    {% include "includes/mensajes.html" %}
+    {% block contenido %}{% endblock %}
+  </main>
+</div>
+{% endblock %}

@@ -1,0 +1,54 @@
+{% extends "base.html" %}{% load sf %}
+{% block titulo %}ServiceFlow: inicio y acceso de clientes{% endblock %}
+{% block cuerpo %}
+<div class="stack" style="min-height: 100vh">
+  <header class="pub-header">
+    <div class="wrap">
+      <a class="brand push" href="{% url 'inicio' %}">
+        <span class="brand-mark lg">{% icono "marca" 20 2.4 "#FFFFFF" %}</span>
+        <span class="brand-name lg">ServiceFlow</span>
+      </a>
+      <a class="link-btn" href="{% url 'personal' %}">{% icono "maletin" %} Acceso del personal</a>
+    </div>
+  </header>
+
+  <section style="flex: 1">
+    <div class="wrap hero">
+      <div class="hero-text">
+        <h1>Tu celular en reparación, paso a paso</h1>
+        <p class="lead">Solicita una reparación, mira en qué etapa está y recibe un aviso cuando llegue tu repuesto o se confirme la fecha de entrega.</p>
+        <ul class="ticks">
+          <li><span class="tick-icon">{% icono "mas" 18 2.2 %}</span>Registra tu equipo y la falla desde aquí</li>
+          <li><span class="tick-icon">{% icono "pulso" 18 2.2 %}</span>Sigue el avance con el historial completo</li>
+          <li><span class="tick-icon">{% icono "campana" 18 2.2 %}</span>Recibe avisos por correo en cada cambio</li>
+        </ul>
+      </div>
+
+      <form method="post" action="{% url 'inicio' %}" class="login-card" aria-label="Inicio de sesión de clientes" novalidate>
+        {% csrf_token %}
+        <div class="stack gap-6">
+          <h2>Te damos la bienvenida</h2>
+          <p class="muted" style="font-size: 15px">Inicia sesión para ver tus reparaciones.</p>
+        </div>
+        {% include "includes/error_login.html" %}
+        {% include "includes/clave.html" with id="usuario" ejemplo="Ejemplo: aquispe" %}
+        <button type="submit" class="btn lg block">Iniciar sesión</button>
+        <p class="login-foot">¿Primera vez aquí? <a href="{% url 'atencion:registro' %}" style="font-weight: 700">Crea tu cuenta</a></p>
+      </form>
+    </div>
+  </section>
+
+  <section aria-labelledby="pasos" class="steps-band">
+    <div class="wrap">
+      <h2 id="pasos">Así avanza tu reparación</h2>
+      <ol class="steps">
+        <li><strong>Recibida</strong><span>Registramos tu equipo y la falla.</span></li>
+        <li><strong>En evaluación</strong><span>Un técnico revisa el equipo y define qué pieza necesita.</span></li>
+        <li><strong>En reparación</strong><span>Con la pieza lista, te damos la fecha de entrega.</span></li>
+        <li><strong>Reparada</strong><span>Te avisamos que puedes recogerlo.</span></li>
+        <li><strong>Entregada</strong><span>Recoges tu equipo en el centro.</span></li>
+      </ol>
+    </div>
+  </section>
+</div>
+{% endblock %}

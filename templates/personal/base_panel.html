@@ -1,0 +1,29 @@
+{% extends "base.html" %}{% load sf %}
+{% block cuerpo %}
+<div class="panel">
+  <nav aria-label="Menú de {{ sesion.rol_etiqueta }}" class="side">
+    <a class="brand" href="{% url 'panel' %}" style="color: #FFFFFF">
+      <span class="brand-mark">{% icono "marca" 18 2.4 "#FFFFFF" %}</span>
+      <span class="brand-name">ServiceFlow</span>
+    </a>
+    <div class="side-links">
+      {% for item in sesion.menu %}
+      <a href="{% url item.url %}"{% if item.activo %} aria-current="page"{% endif %}>
+        {% icono item.icono %}{{ item.texto }}{% if item.badge %}<span class="badge">{{ item.badge }}</span>{% endif %}
+      </a>
+      {% endfor %}
+    </div>
+    <div class="user-card">
+      <span class="avatar {{ sesion.avatar }}">{{ sesion.nombre|iniciales }}</span>
+      <div class="stack" style="min-width: 0; flex: 1">
+        <span class="nombre">{{ sesion.nombre }}</span>
+        <span class="rol">{{ sesion.subtitulo }}</span>
+      </div>
+      <form method="post" action="{% url 'salir' %}">{% csrf_token %}<button type="submit" class="icon-btn" aria-label="Salir">{% icono "salir" %}</button></form>
+    </div>
+  </nav>
+  <main class="main{% block main_clase %}{% endblock %}">
+    {% block contenido %}{% endblock %}
+  </main>
+</div>
+{% endblock %}

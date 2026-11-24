@@ -1,0 +1,31 @@
+{% extends "cliente/base_cliente.html" %}{% load sf %}
+{% block titulo %}Avisos · ServiceFlow{% endblock %}
+{% block contenido %}
+<div class="stack gap-4">
+  <h1>Avisos</h1>
+  <p class="muted" style="font-size: 15px">Cada vez que cambia el estado o la fecha de tus reparaciones te avisamos aquí y por correo.</p>
+</div>
+<section class="box clip" aria-label="Lista de avisos">
+  <div class="avisos">
+    {% for a in avisos %}
+    <article class="aviso{% if a.nuevo %} nuevo{% endif %}">
+      <span class="icono">{% icono "campana" 18 2.2 %}</span>
+      <div class="cuerpo">
+        <strong>{{ a.asunto }}</strong>
+        <p>{{ a.mensaje }}</p>
+        <a href="{% url 'atencion:detalle' a.referencia %}" class="small" style="font-weight: 600">Ver {{ a.referencia }}</a>
+      </div>
+      <div class="meta">
+        <span>{{ a.fecha|cuando }}</span>
+        {% if a.nuevo %}<span class="pill azul">Nuevo</span>{% endif %}
+      </div>
+    </article>
+    {% empty %}
+    <div class="vacio-box">
+      <strong style="color: #151A2D; font-size: 18px">No tienes avisos todavía</strong>
+      <span>Cuando registres una reparación, aquí verás cada cambio.</span>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

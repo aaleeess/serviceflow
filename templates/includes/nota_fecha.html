@@ -1,0 +1,24 @@
+{% load sf %}<div class="nota-fecha">
+  {% icono "reloj" 22 2 "#1428A0" %}
+  <div class="stack gap-4">
+    {% if orden.cancelada %}
+      <strong>Solicitud cancelada</strong>
+      <span class="small muted" style="line-height: 1.5">Si necesitas la reparación, registra una nueva solicitud.</span>
+    {% elif orden.estado == 'ENTREGADA' %}
+      <strong>Equipo entregado</strong>
+      <span class="small muted" style="line-height: 1.5">Gracias por confiar en {{ orden.centro }}.</span>
+    {% elif orden.estado == 'REPARADA' %}
+      <strong>Tu equipo está listo</strong>
+      <span class="small muted" style="line-height: 1.5">Puedes recogerlo en {{ orden.centro }}.</span>
+    {% elif orden.fecha_estimada %}
+      <strong>Entrega estimada: {{ orden.fecha_estimada|date:"l j \d\e F"|capfirst }}</strong>
+      <span class="small muted" style="line-height: 1.5">El técnico confirmó esta fecha. Te avisaremos por correo si cambia.</span>
+    {% elif orden.esperando_repuesto %}
+      <strong>Aún no hay fecha de entrega</strong>
+      <span class="small muted" style="line-height: 1.5">Tu equipo necesita una pieza que estamos consiguiendo. Te avisaremos por correo cuando el técnico confirme la fecha.</span>
+    {% else %}
+      <strong>Fecha de entrega: Por confirmar</strong>
+      <span class="small muted" style="line-height: 1.5">La fecha aparece aquí cuando el técnico la confirme.</span>
+    {% endif %}
+  </div>
+</div>

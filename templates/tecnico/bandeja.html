@@ -1,0 +1,110 @@
+{% extends "personal/base_panel.html" %}{% load sf %}
+{% block titulo %}Técnico: órdenes del centro{% endblock %}
+{% block main_clase %} tight{% endblock %}
+{% block contenido %}
+<header class="stack gap-4">
+  <h1 style="font-size: 28px; font-weight: 700; letter-spacing: -0.02em">Órdenes del centro</h1>
+  <p class="small muted">{{ sesion.centro.nombre|default:"Sin centro" }} (ficticio). Diagnostica, confirma la fecha y marca lo reparado.</p>
+</header>
+{% include "includes/mensajes.html" %}
+{% if b %}
+<div role="group" aria-label="Filtrar por estado" class="chips">
+  <a class="chip" href="?filtro=todas"{% if b.filtro == 'todas' %} aria-current="true"{% endif %}>Todas {{ b.conteos.todas }}</a>
+  <a class="chip" href="?filtro=diagnosticar"{% if b.filtro == 'diagnosticar' %} aria-current="true"{% endif %}>Por diagnosticar {{ b.conteos.diagnosticar }}</a>
+  <a class="chip" href="?filtro=espera"{% if b.filtro == 'espera' %} aria-current="true"{% endif %}>En espera de repuesto {{ b.conteos.espera }}</a>
+  <a class="chip" href="?filtro=reparacion"{% if b.filtro == 'reparacion' %} aria-current="true"{% endif %}>En reparación {{ b.conteos.reparacion }}</a>
+</div>
+
+<div class="duo">
+  <section aria-label="Lista de órdenes" class="box clip ancho">
+    <div class="scroll-x">
+      <table class="tbl" style="min-width: 640px">
+        <thead><tr><th scope="col">Orden</th><th scope="col">Falla reportada</th><th scope="col">Estado</th><th scope="col" class="right">Siguiente paso</th></tr></thead>
+        <tbody>
+        {% for o in b.ordenes %}
+          <tr{% if b.seleccionada and b.seleccionada.codigo == o.codigo %} class="elegida"{% endif %}>
+            <td>
+              <div class="fuerte">{{ o.codigo }}</div>
+              <div class="sub">{{ o.modelo_equipo }}{% if o.fecha_estimada %}, entrega {{ o.fecha_estimada|dia_mes }}{% endif %}</div>
+            </td>
+            <td style="color: #2E3547">{{ o.falla_reportada }}</td>
+            <td><span class="pill {{ o.estado|clase_estado }}">{{ o.estado_texto }}</span></td>
+            <td class="right">
+              {% if o.siguiente == 'diagnosticar' %}
+                {% if b.seleccionada and b.seleccionada.codigo == o.codigo %}<span style="font-weight: 600; color: #1428A0">Diagnosticando</span>
+                {% else %}<a class="btn sm" href="?filtro={{ b.filtro }}&orden={{ o.codigo }}">Diagnosticar</a>{% endif %}
+              {% elif o.siguiente == 'almacen' %}<span class="xsmall muted">Lo atiende Almacén</span>
+              {% elif o.siguiente == 'confirmar_fecha' %}<a class="btn-line azul sm" href="?filtro={{ b.filtro }}&orden={{ o.codigo }}">Confirmar fecha</a>
+              {% elif o.siguiente == 'marcar_reparada' %}
+                <form method="post" action="{% url 'ordenes:marcar_reparada' o.codigo %}" class="inline">{% csrf_token %}<input type="hidden" name="filtro" value="{{ b.filtro }}"><button type="submit" class="btn sm">Marcar reparada</button></form>
+              {% elif o.siguiente == 'entregar' %}
+                <form method="post" action="{% url 'ordenes:entregar' o.codigo %}" class="inline">{% csrf_token %}<input type="hidden" name="filtro" value="{{ b.filtro }}"><button type="submit" class="btn-line azul sm">Registrar entrega</button></form>
+              {% endif %}
+            </td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="4" class="vacio">No hay órdenes en este filtro.</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  {% with s=b.seleccionada %}{% if s %}
+  {% if s.siguiente == 'diagnosticar' %}
+  <form method="post" action="{% url 'ordenes:diagnosticar' s.codigo %}" aria-label="Diagnóstico de {{ s.codigo }}" class="box pad angosto" style="gap: 18px; padding: 22px">
+    {% csrf_token %}<input type="hidden" name="filtro" value="{{ b.filtro }}">
+    <div class="stack gap-4">
+      <span class="xsmall" style="font-weight: 600; color: #1428A0">{{ s.codigo }}, {{ s.modelo_equipo }}</span>
+      <h2 style="font-size: 20px">Diagnóstico</h2>
+    </div>
+    <blockquote class="cita"><span>{{ s.cliente }} reportó</span>{{ s.falla_reportada }}</blockquote>
+    <div class="field">
+      <label for="diag" class="label">Qué encontraste</label>
+      <textarea id="diag" name="descripcion" rows="3" class="textarea" placeholder="Describe la falla y la causa" required></textarea>
+    </div>
+    <div style="display: grid; grid-template-columns: minmax(0, 1fr) 96px; gap: 12px">
+      <div class="field">
+        <label for="rep" class="label">Repuesto</label>
+        <select id="rep" name="repuesto" class="select" onchange="document.getElementById('cant').disabled=!this.value">
+          {% for r in b.repuestos %}<option value="{{ r.id }}">{{ r.nombre }} ({{ r.disponible }} en stock)</option>{% endfor %}
+          <option value="">Sin repuesto</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="cant" class="label">Cantidad</label>
+        <input id="cant" name="cantidad" type="number" min="1" value="1" class="input"{% if not b.repuestos %} disabled{% endif %}>
+      </div>
+    </div>
+    <p class="xsmall muted" style="margin-top: -6px">Solo aparecen repuestos compatibles con {{ s.modelo_equipo }}.</p>
+    <div style="display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 10px">
+      <button type="submit" class="btn">Guardar diagnóstico</button>
+      <button type="reset" class="btn-line" onclick="setTimeout(()=>{const c=document.getElementById('cant');c.disabled=!document.getElementById('rep').value;})">Cancelar</button>
+    </div>
+    <p class="xsmall muted" style="margin-top: -8px">Cancelar borra lo escrito y deshace la pieza elegida. No se guarda nada.</p>
+  </form>
+  {% elif s.siguiente == 'confirmar_fecha' or s.siguiente == 'marcar_reparada' %}
+  <section aria-label="Reparación de {{ s.codigo }}" class="box pad angosto" style="gap: 18px; padding: 22px">
+    <div class="stack gap-4">
+      <span class="xsmall" style="font-weight: 600; color: #1428A0">{{ s.codigo }}, {{ s.modelo_equipo }}</span>
+      <h2 style="font-size: 20px">Reparación</h2>
+    </div>
+    <blockquote class="cita"><span>Diagnóstico</span>{{ s.diagnostico }}{% if s.repuesto %}<br>Repuesto reservado: {{ s.repuesto }}{% endif %}</blockquote>
+    <form method="post" action="{% url 'ordenes:confirmar_fecha' s.codigo %}" class="stack gap-10">
+      {% csrf_token %}<input type="hidden" name="filtro" value="{{ b.filtro }}">
+      <div class="field">
+        <label for="fecha" class="label">Fecha de entrega</label>
+        <input id="fecha" name="fecha" type="date" class="input" min="{{ hoy|date:'Y-m-d' }}" value="{{ s.fecha_estimada|date:'Y-m-d' }}" required>
+        <span class="help">El cliente ve la fecha recién cuando la confirmas.</span>
+      </div>
+      <button type="submit" class="btn-line azul">{% if s.fecha_estimada %}Cambiar fecha{% else %}Confirmar fecha{% endif %}</button>
+    </form>
+    {% if s.fecha_estimada %}
+    <form method="post" action="{% url 'ordenes:marcar_reparada' s.codigo %}">{% csrf_token %}<input type="hidden" name="filtro" value="{{ b.filtro }}"><button type="submit" class="btn block">Marcar reparada</button></form>
+    {% endif %}
+  </section>
+  {% endif %}
+  {% endif %}{% endwith %}
+</div>
+{% endif %}
+{% endblock %}

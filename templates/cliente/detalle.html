@@ -1,0 +1,45 @@
+{% extends "cliente/base_cliente.html" %}{% load sf %}
+{% block titulo %}{{ orden.codigo }} · Mis reparaciones{% endblock %}
+{% block contenido %}
+<a href="{% url 'atencion:mis_reparaciones' %}" class="small" style="font-weight: 600">← Mis reparaciones</a>
+<article aria-label="{{ orden.codigo }}" class="orden-card">
+  <div class="row gap-12" style="align-items: flex-start">
+    <div class="stack gap-4 push">
+      <span class="codigo">{{ orden.codigo }} · {{ orden.centro }}</span>
+      <h2>{{ orden.modelo_equipo }}</h2>
+      <span class="small muted">{{ orden.falla_reportada }}</span>
+    </div>
+    <span class="pill lg {% if orden.esperando_repuesto %}ambar{% else %}{{ orden.estado|clase_estado }}{% endif %}">{{ orden.estado_texto }}</span>
+  </div>
+  {% include "includes/progreso.html" %}
+  {% include "includes/diagnostico_cliente.html" %}
+  <div class="row gap-24" style="align-items: flex-start">
+    {% include "includes/nota_fecha.html" %}
+    {% include "includes/historial.html" %}
+  </div>
+  {% if orden.puede_cancelar %}
+  <form method="post" action="{% url 'atencion:cancelar' orden.codigo %}" class="stack gap-10" style="padding-top: 16px; border-top: 1px solid #E6E9F0">
+    {% csrf_token %}
+    <div class="field">
+      <label for="motivo" class="label">¿Ya no necesitas la reparación? <span class="opcional">Cuéntanos el motivo (opcional)</span></label>
+      <textarea id="motivo" name="motivo" rows="2" class="textarea" placeholder="Ej.: lo reparé en otro lugar"></textarea>
+    </div>
+    <div><button type="submit" class="btn-line rojo">Cancelar solicitud</button></div>
+  </form>
+  {% endif %}
+</article>
+<section class="box clip" aria-label="Avisos de {{ orden.codigo }}">
+  <div class="box-head"><h2>Avisos de esta reparación</h2><a href="{% url 'atencion:avisos' %}" class="small" style="font-weight: 600">Todos mis avisos</a></div>
+  <div class="avisos">
+    {% for a in avisos %}
+    <article class="aviso{% if a.nuevo %} nuevo{% endif %}">
+      <span class="icono">{% icono "campana" 18 2.2 %}</span>
+      <div class="cuerpo"><strong>{{ a.asunto }}</strong><p>{{ a.mensaje }}</p></div>
+      <div class="meta"><span>{{ a.fecha|cuando }}</span></div>
+    </article>
+    {% empty %}
+    <p class="vacio-box">Todavía no hay avisos de esta reparación.</p>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

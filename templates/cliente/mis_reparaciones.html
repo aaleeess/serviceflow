@@ -1,0 +1,78 @@
+{% extends "cliente/base_cliente.html" %}{% load sf %}
+{% block titulo %}Cliente: mis reparaciones{% endblock %}
+{% block contenido %}
+<div class="row gap-16" style="align-items: flex-end">
+  <div class="stack gap-4 push">
+    <h1>Mis reparaciones</h1>
+    <p class="muted" style="font-size: 15px">
+      {% if ordenes %}Tienes {{ ordenes|length }} equipo{{ ordenes|length|pluralize }}{% if centros_cliente|length == 1 %} en el {% for c in centros_cliente %}{{ c }}{% endfor %}{% endif %}.{% else %}Aún no tienes reparaciones registradas.{% endif %}
+      <a href="{% url 'atencion:centros' %}">Ver centros y horarios</a>
+    </p>
+  </div>
+  <form method="get" role="search" class="buscar-codigo">
+    <label class="search">
+      {% icono "buscar" 18 2 "#545D73" %}
+      <span class="sr-only">Buscar por código</span>
+      <input type="search" name="codigo" value="{{ buscado }}" placeholder="Buscar código, ej. RO-00002">
+    </label>
+  </form>
+  <a class="btn" href="{% url 'atencion:nueva_solicitud' %}" style="min-height: 48px">{% icono "mas" 18 2.4 %} Nueva solicitud</a>
+</div>
+
+{% if novedades %}
+<section class="novedades" aria-label="Novedades">
+  <div class="row gap-8">{% icono "campana" 18 2.2 %}<strong>Tienes {{ sesion.avisos_nuevos }} aviso{{ sesion.avisos_nuevos|pluralize }} sin leer</strong>
+    <a href="{% url 'atencion:avisos' %}" class="small" style="margin-left: auto; font-weight: 700">Ver todos</a></div>
+  <ul>
+    {% for a in novedades %}<li><strong>{{ a.referencia }}:</strong> {{ a.asunto }} <span class="muted">· {{ a.fecha|cuando }}</span></li>{% endfor %}
+  </ul>
+</section>
+{% endif %}
+
+{% for orden in ordenes %}
+{% if forloop.first %}
+<article aria-label="{{ orden.codigo }}" class="orden-card">
+  <div class="row gap-12" style="align-items: flex-start">
+    <div class="stack gap-4 push">
+      <span class="codigo">{{ orden.codigo }}</span>
+      <h2>{{ orden.modelo_equipo }}</h2>
+      <span class="small muted">{{ orden.falla_reportada }}</span>
+    </div>
+    <span class="pill lg {% if orden.esperando_repuesto %}ambar{% else %}{{ orden.estado|clase_estado }}{% endif %}">{{ orden.estado_texto }}</span>
+  </div>
+  {% include "includes/progreso.html" %}
+  {% if orden.diagnostico %}{% include "includes/diagnostico_cliente.html" %}{% endif %}
+  <div class="row gap-24" style="align-items: flex-start">
+    {% include "includes/nota_fecha.html" %}
+    {% include "includes/historial.html" %}
+  </div>
+  <div class="row gap-8">
+    <a class="btn-line sm" href="{% url 'atencion:detalle' orden.codigo %}">Ver detalle</a>
+    {% if orden.puede_cancelar %}{% include "cliente/_cancelar.html" %}{% endif %}
+  </div>
+</article>
+{% else %}
+<article aria-label="{{ orden.codigo }}" class="orden-card compacta">
+  <div class="stack gap-4" style="flex: 1 1 220px">
+    <span class="codigo">{{ orden.codigo }}</span>
+    <h2>{{ orden.modelo_equipo }}</h2>
+    <span class="small muted">{{ orden.falla_reportada }}</span>
+    {% if orden.cancelada %}<span class="pill rojo" style="align-self: flex-start">Cancelada</span>{% endif %}
+  </div>
+  {% include "includes/progreso.html" %}
+  <div class="row gap-8">
+    <a class="btn-line sm" href="{% url 'atencion:detalle' orden.codigo %}">Ver detalle</a>
+    {% if orden.puede_cancelar %}{% include "cliente/_cancelar.html" %}{% endif %}
+  </div>
+</article>
+{% endif %}
+{% empty %}
+<div class="box vacio-box">
+  <strong style="color: #151A2D; font-size: 18px">Registra tu primera reparación</strong>
+  <span>Cuéntanos qué equipo tienes y qué le pasa. Te damos un código para seguir el avance.</span>
+  <a class="btn" href="{% url 'atencion:nueva_solicitud' %}">Nueva solicitud</a>
+</div>
+{% endfor %}
+
+<p class="xsmall muted">Solo puedes cancelar mientras tu solicitud está en Recibida. Después, comunícate con el centro.</p>
+{% endblock %}
